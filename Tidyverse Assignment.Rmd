@@ -1,0 +1,86 @@
+---
+title: "DATA607_Tidyverse"
+author: "Pei-Ming_Chen"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+In this assignment, you’ll practice collaborating around a code project with GitHub.  You could consider our collective work as building out a book of examples on how to use TidyVerse functions.
+Your task here is to Create an Example.  Using one or more TidyVerse packages, and any dataset from fivethirtyeight.com or Kaggle, create a programming sample “vignette” that demonstrates how to use one or more of the capabilities of the selected TidyVerse package with your selected dataset.
+
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(forcats)
+library(tibble)
+```
+
+### Download dataset from Kaggle.com and send the CSV file to Github
+
+The  NYC housing dataset provides a great analytical source for affordable housing plan. The data includes building characteristics , affordability levels, location and ownership for all properties.  The building data file contains building information such as the building’s address, number of units and building type.  These data indeed is critical for planning development projects. From the analysis, we get to see the trend of specific housing type of a certern region of NYC. 
+
+```{r}
+NYChouse <- read.csv("https://raw.githubusercontent.com/PMCformosa/Tidyverse-Assignment/main/apartment_cost_list.csv")
+NYChouse
+
+head(NYChouse)
+```
+
+### Rename columns of the dataset
+
+```{r}
+colnames(NYChouse) <- c("Job_number","Borough_NYC","House_number", "Street", "Block", "Lot","Bin","Job.Type", "Board","Curb.Cut", "Permitted_Date", "Initial.Cost", "Proposed.Zoning.Sqft", "Horizontal.Enlrgmt", "Vertical.Enlrgmt" , "Enlargement.SQ", "Zoning.Dist1", "Job.Description")
+
+glimpse(NYChouse)
+```
+
+### Add a column with detail address and borough of New York City
+
+```{r}
+NYChouse$Location <- str_c(NYChouse$House_number, NYChouse$Street, NYChouse$Borough_NYC, sep = " located at ")
+
+head(NYChouse$Location)
+```
+### Check only houses locate at Brooklyn borough of NYC 
+
+```{r}
+BKHouse <- NYChouse %>% filter(str_detect(Borough_NYC,"BROOKLYN"))
+
+head(BKHouse)
+
+```
+
+### Select house units locate on "Avenue" address , listed in a Zoning district and contain combination of smaller units 
+
+```{r}
+NYChouse_2 <- NYChouse %>% filter(!str_detect(Zoning.Dist1,"-"))
+
+NYChouse_3 <- NYChouse_2 %>% filter(str_detect(Street,"AVENUE"))
+
+NYChouse_4 <- NYChouse_3 %>% filter(str_detect(Job.Description,"combination"))
+
+NYChouse_4
+```
+
+```{r}
+NYChouse_4$year <-  format(as.Date(NYChouse_4$Permitted_Date, format="%d/%m/%Y"),"%Y")
+
+NYChouse_4 <- na.omit(NYChouse_4)
+
+```
+
+### The relatiohship between Housing initial price and fully permitted date is plotted below 
+
+```{r}
+NYChouse_5 <- NYChouse_4 %>%
+ggplot(aes( NYChouse_4$year, Initial.Cost, group = 1)) + geom_point(na.rm=TRUE, color = "blue") + geom_line(na.rm=TRUE, color = "green")+
+  labs(title = "Manhattan Housing Initial Price and Dates", x = "Permitted_Date", y = "Initial_Price")
+NYChouse_5
+
+```
+
+
